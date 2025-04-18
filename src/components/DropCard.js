@@ -1,6 +1,15 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 const DropCard = ({ drop, onClick }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+  const cardRef = useRef(null);
+  
+  // Animation on mount
+  useEffect(() => {
+    const timer = setTimeout(() => setIsVisible(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
   const { emoji, title, date, location, friendsCount, isHost, vibe = 'chill', friends = [] } = drop;
   
   // Format date to be more readable
@@ -9,213 +18,318 @@ const DropCard = ({ drop, onClick }) => {
     return new Date(dateString).toLocaleString('en-US', options);
   };
 
-  // Format time relative to now
-  const getRelativeTime = (dateString) => {
-    const eventDate = new Date(dateString);
-    const now = new Date();
-    const diffDays = Math.round((eventDate - now) / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 0) return 'Today';
-    if (diffDays === 1) return 'Tomorrow';
-    if (diffDays > 1 && diffDays < 7) return `In ${diffDays} days`;
-    
-    return formatDate(dateString).split(',')[0]; // Just the day name
-  };
+  // Note: formatDate is kept for future use
+  // formatDate is still used for formatting in formatDateTime
 
   // Get border color based on vibe
-  const getBorderColor = (vibe) => {
+  const getVibeBorderColor = (vibe) => {
     const vibeColors = {
-      chill: '#facc15', // yellow-400
-      silly: '#4ade80', // green-400
-      sweaty: '#f87171', // red-400
+      chill: '#4ade80', // green-500
+      silly: '#f472b6', // pink-400
+      sweaty: '#ef4444', // red-500
       talky: '#60a5fa', // blue-400
-      spontaneous: '#c084fc' // purple-400
+      spontaneous: '#f97316', // orange-500
     };
-    return vibeColors[vibe] || '#d1d5db'; // gray-300 default
+    return vibeColors[vibe] || '#cbd5e1'; // Default to slate-300
   };
 
-  const getTextColor = (vibe) => {
-    const textColors = {
-      chill: '#854d0e', // yellow-800
-      silly: '#166534', // green-800
-      sweaty: '#991b1b', // red-800
-      talky: '#1e40af', // blue-800
-      spontaneous: '#6b21a8' // purple-800
+  const getVibeEmoji = (vibe) => {
+    const vibeEmojis = {
+      chill: '😌',
+      silly: '🤪',
+      sweaty: '💪',
+      talky: '💬',
+      spontaneous: '⚡️'
     };
-    return textColors[vibe] || '#1f2937'; // gray-800 default
+    return vibeEmojis[vibe] || '👀';
   };
 
-  const getBackgroundColor = (vibe) => {
-    const bgColors = {
-      chill: '#fef9c3', // yellow-100
-      silly: '#dcfce7', // green-100
-      sweaty: '#fee2e2', // red-100
-      talky: '#dbeafe', // blue-100
-      spontaneous: '#f3e8ff' // purple-100
-    };
-    return bgColors[vibe] || '#f3f4f6'; // gray-100 default
+  const formatDateTime = (dateString) => {
+    const date = new Date(dateString);
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    // Day and month formatting
+    const month = date.toLocaleString('default', { month: 'short' });
+    const dayNum = date.getDate();
+    const dayName = date.toLocaleString('default', { weekday: 'short' });
+    
+    // Time formatting
+    const time = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    // Check if it's today, tomorrow, or within the week
+    if (date.toDateString() === today.toDateString()) {
+      return (
+        <>
+          <span style={styles.timeHighlight}>Today</span>
+          <span style={styles.timeDetail}>{time}</span>
+        </>
+      );
+    } else if (date.toDateString() === tomorrow.toDateString()) {
+      return (
+        <>
+          <span style={styles.timeHighlight}>Tomorrow</span>
+          <span style={styles.timeDetail}>{time}</span>
+        </>
+      );
+    } else if (date - today < 7 * 24 * 60 * 60 * 1000) {
+      // Within a week
+      return (
+        <>
+          <span style={styles.timeHighlight}>{dayName}</span>
+          <span style={styles.timeDetail}>{time}</span>
+        </>
+      );
+    } else {
+      return (
+        <>
+          <span style={styles.timeHighlight}>{dayName}, {month} {dayNum}</span>
+          <span style={styles.timeDetail}>{time}</span>
+        </>
+      );
+    }
   };
-  
-  // Format time for display (e.g., "7:30 PM")
-  const formatTime = (dateString) => {
-    return new Date(dateString).toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    });
+
+  const formatFriends = (friends, totalCount) => {
+    if (!friends || friends.length === 0) return null;
+    
+    // Show up to 3 friend avatars
+    const displayedFriends = friends.slice(0, 3);
+    const remainingCount = totalCount - displayedFriends.length;
+    
+    return (
+      <div style={styles.friendsContainer}>
+        <div style={styles.avatarGroup}>
+          {displayedFriends.map((friend, index) => (
+            <div 
+              key={index} 
+              style={{
+                ...styles.avatar,
+                zIndex: displayedFriends.length - index,
+                marginLeft: index > 0 ? '-8px' : '0'
+              }}
+              title={friend}
+            >
+              {friend.charAt(0)}
+            </div>
+          ))}
+          {remainingCount > 0 && (
+            <div style={styles.avatarMore} title={`${remainingCount} more friends`}>
+              +{remainingCount}
+            </div>
+          )}
+        </div>
+        <div style={styles.friendsText}>{totalCount} {totalCount === 1 ? 'friend' : 'friends'}</div>
+      </div>
+    );
   };
 
   const styles = {
     card: {
       display: 'flex',
       flexDirection: 'column',
-      gap: '8px',
+      padding: '16px',
       backgroundColor: 'white',
       borderRadius: '12px',
-      boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-      border: '1px solid #e5e7eb',
-      borderLeft: `4px solid ${getBorderColor(vibe)}`,
-      padding: '16px',
-      paddingLeft: '20px',
+      marginBottom: '16px',
       cursor: 'pointer',
-      transition: 'box-shadow 0.2s ease',
+      position: 'relative',
+      borderLeft: `4px solid ${getVibeBorderColor(vibe)}`,
+      transition: 'transform 0.2s ease-out, box-shadow 0.2s ease-out, opacity 0.4s ease-out',
+      opacity: isVisible ? 1 : 0,
+      transform: isHovered ? 'translateY(-2px)' : 'translateY(0)',
+      boxShadow: isHovered ? '0 4px 8px rgba(0, 0, 0, 0.12)' : '0 1px 3px rgba(0, 0, 0, 0.1)',
     },
-    cardHover: {
-      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
-    },
-    topRow: {
+    header: {
       display: 'flex',
-      alignItems: 'flex-start',
-      gap: '12px'
+      alignItems: 'center',
+      marginBottom: '12px',
+      gap: '8px'
     },
     emoji: {
       fontSize: '24px',
-      marginRight: '4px'
-    },
-    contentContainer: {
-      flex: 1
-    },
-    titleRow: {
+      marginRight: '8px',
       display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'flex-start'
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: '40px',
+      height: '40px',
+      backgroundColor: `${getVibeBorderColor(vibe)}15`, // Using the vibe color with 15% opacity
+      borderRadius: '10px',
+      transition: 'transform 0.15s ease-in-out',
+      transform: isHovered ? 'scale(1.05)' : 'scale(1)'
     },
     title: {
-      fontWeight: 600,
       fontSize: '18px',
-      color: '#1f2937',
-      lineHeight: 1.25
+      fontWeight: '600',
+      margin: '0',
+      color: '#1e293b', // slate-800
+      flex: '1'
     },
-    vibeTag: {
-      fontSize: '12px',
-      fontWeight: 500,
-      color: getTextColor(vibe),
-      backgroundColor: getBackgroundColor(vibe),
-      padding: '2px 8px',
-      borderRadius: '9999px'
+    dateContainer: {
+      display: 'flex',
+      alignItems: 'center',
+      marginBottom: '8px',
+      gap: '5px',
     },
-    infoRow: {
+    dateIcon: {
+      color: '#94a3b8', // slate-400
+      fontSize: '16px',
+      display: 'flex',
+      alignItems: 'center',
+      marginRight: '4px',
+    },
+    dateTime: {
       display: 'flex',
       alignItems: 'center',
       gap: '4px',
-      marginTop: '4px'
-    },
-    icon: {
-      width: '14px',
-      height: '14px',
-      color: '#9ca3af'
-    },
-    infoText: {
       fontSize: '14px',
-      color: '#6b7280',
-      lineHeight: 1.25
+      color: '#64748b', // slate-500
+      marginBottom: '5px',
     },
-    bold: {
-      fontWeight: 500
+    timeHighlight: {
+      fontWeight: '500',
+      color: '#334155', // slate-700
     },
-    metaRow: {
+    timeDetail: {
+      color: '#64748b', // slate-500
+    },
+    location: {
+      fontSize: '14px',
+      color: '#64748b', // slate-500
+      marginBottom: '14px',
       display: 'flex',
       alignItems: 'center',
+      gap: '4px',
+    },
+    meta: {
+      display: 'flex',
       justifyContent: 'space-between',
-      fontSize: '14px',
-      color: '#6b7280',
-      marginTop: '4px',
-      paddingTop: '8px',
-      borderTop: '1px solid #f3f4f6'
+      alignItems: 'center',
     },
     friendsContainer: {
       display: 'flex',
       alignItems: 'center',
-      gap: '8px'
+      gap: '8px',
+    },
+    avatarGroup: {
+      display: 'flex',
+      alignItems: 'center',
+    },
+    avatar: {
+      width: '24px',
+      height: '24px',
+      borderRadius: '50%',
+      backgroundColor: '#e2e8f0', // slate-200
+      color: '#475569', // slate-600
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontSize: '12px',
+      fontWeight: '600',
+      border: '1.5px solid white',
+    },
+    avatarMore: {
+      width: '24px',
+      height: '24px',
+      borderRadius: '50%',
+      backgroundColor: '#f1f5f9', // slate-100
+      color: '#64748b', // slate-500
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontSize: '10px',
+      fontWeight: '600',
+      marginLeft: '-8px',
+      border: '1.5px solid white',
     },
     friendsText: {
-      fontSize: '12px'
+      fontSize: '14px',
+      color: '#64748b', // slate-500
     },
-    friendsList: {
-      color: '#9ca3af',
-      marginLeft: '4px'
+    host: {
+      fontSize: '14px',
+      color: '#2563eb', // blue-600
+      fontWeight: '500',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '4px',
     },
     hostBadge: {
-      fontSize: '12px',
-      fontWeight: 500,
-      backgroundColor: '#eff6ff',
-      color: '#2563eb',
+      fontSize: '11px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: '#dbeafe', // blue-100
+      color: '#2563eb', // blue-600
       padding: '2px 8px',
       borderRadius: '9999px'
+    },
+    vibeBadge: {
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: '3px',
+      backgroundColor: `${getVibeBorderColor(vibe)}15`, // Using the vibe color with 15% opacity
+      color: getVibeBorderColor(vibe),
+      padding: '2px 6px',
+      borderRadius: '8px',
+      fontSize: '11px',
+      fontWeight: '600',
+      textTransform: 'capitalize',
     }
   };
   
   return (
     <div 
-      style={styles.card} 
+      ref={cardRef}
       onClick={onClick}
-      onMouseOver={(e) => e.currentTarget.style.boxShadow = styles.cardHover.boxShadow}
-      onMouseOut={(e) => e.currentTarget.style.boxShadow = styles.card.boxShadow}
+      style={styles.card}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
-      <div style={styles.topRow}>
-        <div style={styles.emoji}>
-          <span role="img" aria-label={`Event emoji: ${emoji}`}>{emoji}</span>
-        </div>
-        <div style={styles.contentContainer}>
-          <div style={styles.titleRow}>
-            <h3 style={styles.title}>{title}</h3>
-            <div style={styles.vibeTag}>
-              {vibe.charAt(0).toUpperCase() + vibe.slice(1)}
-            </div>
-          </div>
-          <div style={styles.infoRow}>
-            <svg style={styles.icon} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <p style={styles.infoText}>
-              <span style={styles.bold}>{getRelativeTime(date)}</span> at {formatTime(date)}
-            </p>
-          </div>
-          <div style={styles.infoRow}>
-            <svg style={styles.icon} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            <p style={styles.infoText}>{location || 'Location TBD'}</p>
-          </div>
-        </div>
+      <div style={styles.header}>
+        <span 
+          style={styles.emoji}
+          role="img"
+          aria-label={`Event emoji: ${emoji}`}
+        >
+          {emoji}
+        </span>
+        <h3 style={styles.title}>{title}</h3>
       </div>
       
-      <div style={styles.metaRow}>
-        <div style={styles.friendsContainer}>
-          <svg style={styles.icon} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-          </svg>
-          <span style={styles.friendsText}>
-            {friendsCount} {friendsCount === 1 ? 'friend' : 'friends'} going
-            {friends.length > 0 && friends.length <= 3 && (
-              <span style={styles.friendsList}>{friends.slice(0, 3).join(', ')}</span>
-            )}
-          </span>
+      <div style={styles.dateTime}>
+        <svg style={styles.dateIcon} width="14" height="14" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+          <path fill="currentColor" d="M4.5 3.5a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-9a1 1 0 0 0-1-1h-8zm-2 1a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-8a2 2 0 0 1-2-2v-9z"/>
+          <path fill="currentColor" d="M11.5 8.5a.5.5 0 0 0 0-1h-6a.5.5 0 0 0 0 1h6z"/>
+          <path fill="currentColor" d="M8.5 11.5a.5.5 0 0 0 0-1h-3a.5.5 0 0 0 0 1h3z"/>
+          <path fill="currentColor" d="M5.5 2a.5.5 0 0 0-1 0v2.5a.5.5 0 0 0 1 0V2z"/>
+          <path fill="currentColor" d="M12.5 2a.5.5 0 0 0-1 0v2.5a.5.5 0 0 0 1 0V2z"/>
+        </svg>
+        {formatDateTime(date)}
+      </div>
+      
+      <div style={styles.location}>
+        <svg style={styles.dateIcon} width="14" height="14" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+          <path fill="currentColor" d="M8 2a4 4 0 0 0-4 4c0 3 4 9 4 9s4-6 4-9a4 4 0 0 0-4-4zm0 6a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"/>
+        </svg>
+        {location}
+      </div>
+      
+      <div style={styles.meta}>
+        {formatFriends(friends, friendsCount)}
+        <div style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
+          <div style={styles.vibeBadge}>
+            <span>{getVibeEmoji(vibe)}</span>
+            <span>{vibe}</span>
+          </div>
+          {isHost && (
+            <div style={styles.hostBadge}>
+              Host
+            </div>
+          )}
         </div>
-        {isHost && (
-          <span style={styles.hostBadge}>Host</span>
-        )}
       </div>
     </div>
   );
