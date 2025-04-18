@@ -1,5 +1,83 @@
 // Sample data for Let's Hang app
+
+// RSVP status options
+export const RSVP_STATUS = {
+  GOING: 'going',
+  MAYBE: 'maybe',
+  NOT_GOING: 'not_going',
+  NO_RESPONSE: 'no_response'
+};
+
+// Sample photo images (using placeholder images)
+const PLACEHOLDER_IMAGES = [
+  'https://source.unsplash.com/random/800x600/?pizza',
+  'https://source.unsplash.com/random/800x600/?party',
+  'https://source.unsplash.com/random/800x600/?friends',
+  'https://source.unsplash.com/random/800x600/?food',
+  'https://source.unsplash.com/random/800x600/?drinks',
+  'https://source.unsplash.com/random/800x600/?restaurant',
+  'https://source.unsplash.com/random/800x600/?run',
+  'https://source.unsplash.com/random/800x600/?coffee',
+  'https://source.unsplash.com/random/800x600/?park',
+  'https://source.unsplash.com/random/800x600/?game',
+  'https://source.unsplash.com/random/800x600/?videogame',
+  'https://source.unsplash.com/random/800x600/?gaming'
+];
+
 const sampleDrops = [
+  {
+    id: '0',
+    emoji: '🎮',
+    title: 'Game Night at Riley\'s',
+    date: '2025-04-01T19:00', // Past event date
+    location: 'Riley\'s Apartment, 42 Oak St',
+    friendsCount: 4,
+    isHost: false,
+    vibe: 'silly',
+    friends: ['Riley', 'Quinn', 'Sam', 'Casey'],
+    yourRsvp: RSVP_STATUS.GOING,
+    rsvpNote: 'Brought snacks!',
+    photoLink: 'https://photos.app.goo.gl/examplelink123', // Your photo link
+    friendsRsvp: [
+      { 
+        name: 'Riley', 
+        status: RSVP_STATUS.GOING, 
+        note: 'Can\'t wait to destroy everyone at Mario Kart!',
+        photoLink: 'https://photos.google.com/share/AF1QipMxample'
+      },
+      { 
+        name: 'Quinn', 
+        status: RSVP_STATUS.GOING, 
+        note: 'Bringing extra controllers',
+        photoLink: 'https://share.icloud.com/photos/example2'
+      },
+      { 
+        name: 'Sam', 
+        status: RSVP_STATUS.GOING 
+      },
+      { 
+        name: 'Casey', 
+        status: RSVP_STATUS.MAYBE, 
+        note: 'Might be late' 
+      }
+    ],
+    photos: [
+      {
+        id: '001',
+        url: PLACEHOLDER_IMAGES[10],
+        caption: 'Epic game night!',
+        uploadedBy: 'Riley',
+        timestamp: '2025-04-01T21:30:00'
+      },
+      {
+        id: '002',
+        url: PLACEHOLDER_IMAGES[11],
+        caption: 'Victory pose',
+        uploadedBy: 'Quinn',
+        timestamp: '2025-04-01T22:15:00'
+      }
+    ]
+  },
   {
     id: '1',
     emoji: '🍕',
@@ -9,7 +87,32 @@ const sampleDrops = [
     friendsCount: 5,
     isHost: true,
     vibe: 'chill',
-    friends: ['Alex', 'Jamie', 'Taylor', 'Morgan', 'Jordan']
+    friends: ['Alex', 'Jamie', 'Taylor', 'Morgan', 'Jordan'],
+    yourRsvp: RSVP_STATUS.GOING,
+    rsvpNote: '',
+    friendsRsvp: [
+      { name: 'Alex', status: RSVP_STATUS.GOING },
+      { name: 'Jamie', status: RSVP_STATUS.GOING },
+      { name: 'Taylor', status: RSVP_STATUS.GOING },
+      { name: 'Morgan', status: RSVP_STATUS.GOING },
+      { name: 'Jordan', status: RSVP_STATUS.GOING }
+    ],
+    photos: [
+      {
+        id: '101',
+        url: PLACEHOLDER_IMAGES[0],
+        caption: 'Pizza party vibes',
+        uploadedBy: 'Alex',
+        timestamp: '2025-04-19T20:00:00'
+      },
+      {
+        id: '102',
+        url: PLACEHOLDER_IMAGES[1],
+        caption: 'Roberta\'s Pizza is the best',
+        uploadedBy: 'Jamie',
+        timestamp: '2025-04-19T21:00:00'
+      }
+    ]
   },
   {
     id: '2',
@@ -20,7 +123,29 @@ const sampleDrops = [
     friendsCount: 2,
     isHost: false,
     vibe: 'sweaty',
-    friends: ['Chris', 'Pat']
+    friends: ['Chris', 'Pat'],
+    yourRsvp: RSVP_STATUS.MAYBE,
+    rsvpNote: '',
+    friendsRsvp: [
+      { name: 'Chris', status: RSVP_STATUS.GOING },
+      { name: 'Pat', status: RSVP_STATUS.GOING, note: 'Will bring water bottles' }
+    ],
+    photos: [
+      {
+        id: '201',
+        url: PLACEHOLDER_IMAGES[6],
+        caption: 'Early morning vibes',
+        uploadedBy: 'Chris',
+        timestamp: '2025-04-20T08:45:00'
+      },
+      {
+        id: '202',
+        url: PLACEHOLDER_IMAGES[7],
+        caption: 'Post-run coffee hit different',
+        uploadedBy: 'Pat',
+        timestamp: '2025-04-20T09:30:00'
+      }
+    ]
   },
   {
     id: '3',
@@ -31,7 +156,33 @@ const sampleDrops = [
     friendsCount: 6,
     isHost: true,
     vibe: 'silly',
-    friends: ['Riley', 'Casey', 'Sydney', 'Avery', 'Blake', 'Jessie']
+    friends: ['Riley', 'Casey', 'Sydney', 'Avery', 'Blake', 'Jessie'],
+    yourRsvp: RSVP_STATUS.GOING,
+    rsvpNote: '',
+    friendsRsvp: [
+      { name: 'Riley', status: RSVP_STATUS.GOING },
+      { name: 'Casey', status: RSVP_STATUS.GOING },
+      { name: 'Sydney', status: RSVP_STATUS.GOING },
+      { name: 'Avery', status: RSVP_STATUS.GOING },
+      { name: 'Blake', status: RSVP_STATUS.GOING },
+      { name: 'Jessie', status: RSVP_STATUS.GOING }
+    ],
+    photos: [
+      {
+        id: '301',
+        url: PLACEHOLDER_IMAGES[9],
+        caption: 'Game night setup',
+        uploadedBy: 'Riley',
+        timestamp: '2025-04-21T19:30:00'
+      },
+      {
+        id: '302',
+        url: PLACEHOLDER_IMAGES[10],
+        caption: 'Mario Kart tournament',
+        uploadedBy: 'Casey',
+        timestamp: '2025-04-21T21:00:00'
+      }
+    ]
   },
   {
     id: '4',

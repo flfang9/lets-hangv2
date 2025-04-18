@@ -1,8 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
+import RsvpButtons from './RsvpButtons';
+import RsvpExpanded from './RsvpExpanded';
+import { RSVP_STATUS } from '../data/sampleDrops';
 
-const DropCard = ({ drop, onClick }) => {
+const DropCard = ({ drop, onClick, onRsvpChange }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const [showRsvpExpanded, setShowRsvpExpanded] = useState(false);
   const cardRef = useRef(null);
   
   // Animation on mount
@@ -10,12 +14,31 @@ const DropCard = ({ drop, onClick }) => {
     const timer = setTimeout(() => setIsVisible(true), 100);
     return () => clearTimeout(timer);
   }, []);
-  const { emoji, title, date, location, friendsCount, isHost, vibe = 'chill', friends = [] } = drop;
+  const { 
+    emoji, 
+    title, 
+    date, 
+    location, 
+    friendsCount, 
+    isHost, 
+    vibe = 'chill', 
+    friends = [], 
+    yourRsvp = RSVP_STATUS.NO_RESPONSE,
+    rsvpNote = '',
+    friendsRsvp = [] 
+  } = drop;
   
   // Format date to be more readable
   const formatDate = (dateString) => {
     const options = { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' };
     return new Date(dateString).toLocaleString('en-US', options);
+  };
+  
+  // Check if the event date is in the past
+  const isEventPast = () => {
+    const eventDate = new Date(date);
+    const currentDate = new Date();
+    return eventDate < currentDate;
   };
 
   // Note: formatDate is kept for future use
@@ -126,20 +149,25 @@ const DropCard = ({ drop, onClick }) => {
   };
 
   const styles = {
-    card: {
+    container: {
       display: 'flex',
       flexDirection: 'column',
-      padding: '16px',
-      backgroundColor: 'white',
-      borderRadius: '12px',
-      marginBottom: '16px',
-      cursor: 'pointer',
       position: 'relative',
+      backgroundColor: '#fff',
+      borderRadius: '12px',
+      padding: '16px',
+      boxShadow: '0 2px 4px rgba(0,0,0,0.08)',
+      transition: 'all 0.2s ease',
       borderLeft: `4px solid ${getVibeBorderColor(vibe)}`,
-      transition: 'transform 0.2s ease-out, box-shadow 0.2s ease-out, opacity 0.4s ease-out',
+      border: '1px solid #e2e8f0',
+      willChange: 'transform, box-shadow',
+      overflow: 'hidden',
       opacity: isVisible ? 1 : 0,
+      transform: `translateY(${isVisible ? 0 : 20}px)`,
+      marginBottom: showRsvpExpanded ? '24px' : '16px',
+      cursor: 'pointer',
       transform: isHovered ? 'translateY(-2px)' : 'translateY(0)',
-      boxShadow: isHovered ? '0 4px 8px rgba(0, 0, 0, 0.12)' : '0 1px 3px rgba(0, 0, 0, 0.1)',
+      boxShadow: isHovered ? '0 4px 12px rgba(0, 0, 0, 0.1)' : '0 2px 4px rgba(0, 0, 0, 0.08)',
     },
     header: {
       display: 'flex',
@@ -284,18 +312,12 @@ const DropCard = ({ drop, onClick }) => {
     <div 
       ref={cardRef}
       onClick={onClick}
-      style={styles.card}
+      style={styles.container}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       <div style={styles.header}>
-        <span 
-          style={styles.emoji}
-          role="img"
-          aria-label={`Event emoji: ${emoji}`}
-        >
-          {emoji}
-        </span>
+        <div style={styles.emoji}>{emoji}</div>
         <h3 style={styles.title}>{title}</h3>
       </div>
       
@@ -330,6 +352,46 @@ const DropCard = ({ drop, onClick }) => {
             </div>
           )}
         </div>
+      </div>
+      
+      {/* RSVP Section */}
+      <div style={styles.rsvpSection} data-rsvp-control="true">
+        <RsvpButtons 
+          currentStatus={yourRsvp} 
+          onStatusChange={(newStatus) => {
+            if (onRsvpChange) {
+              onRsvpChange(newStatus, rsvpNote);
+            }
+          }}
+          onExpandClick={() => setShowRsvpExpanded(!showRsvpExpanded)}
+        />
+        
+        {showRsvpExpanded && (
+          <RsvpExpanded 
+            currentStatus={yourRsvp}
+            note={rsvpNote}
+            friendsRsvp={friendsRsvp || []}
+            isEventPast={isEventPast()}
+            photoLink={drop.photoLink || ''}
+            onStatusChange={(newStatus) => {
+              if (onRsvpChange) {
+                onRsvpChange(newStatus, rsvpNote);
+              }
+            }}
+            onNoteChange={(newNote) => {
+              if (onRsvpChange) {
+                onRsvpChange(yourRsvp, newNote);
+              }
+            }}
+            onPhotoLinkChange={(newPhotoLink) => {
+              if (onRsvpChange) {
+                // We're using the RSVP change handler to also handle photo links
+                onRsvpChange(yourRsvp, rsvpNote, newPhotoLink);
+              }
+            }}
+            onClose={() => setShowRsvpExpanded(false)}
+          />
+        )}
       </div>
     </div>
   );
