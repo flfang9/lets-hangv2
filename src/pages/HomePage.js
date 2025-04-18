@@ -2,10 +2,13 @@ import React, { useState } from 'react';
 import DropCard from '../components/DropCard';
 import CreateButton from '../components/CreateButton';
 import DropForm from '../components/DropForm';
+import DropDetails from '../components/DropDetails';
 
 const HomePage = ({ drops, onSaveDrop, onRsvpChange, activeTabProp = 'home' }) => {
   const [isDropFormOpen, setIsDropFormOpen] = useState(false);
   const [editingDrop, setEditingDrop] = useState(null);
+  const [viewingDrop, setViewingDrop] = useState(null);
+  const [showRsvpExpanded, setShowRsvpExpanded] = useState(false);
   // Use the prop from parent if provided
   const activeTab = activeTabProp;
 
@@ -14,7 +17,14 @@ const HomePage = ({ drops, onSaveDrop, onRsvpChange, activeTabProp = 'home' }) =
     setIsDropFormOpen(true);
   };
 
+  const handleViewDrop = (drop) => {
+    setViewingDrop(drop);
+  };
+  
   const handleEditDrop = (drop) => {
+    // Close the details view if it's open
+    setViewingDrop(null);
+    // Open the edit form with the selected drop
     setEditingDrop(drop);
     setIsDropFormOpen(true);
   };
@@ -22,6 +32,11 @@ const HomePage = ({ drops, onSaveDrop, onRsvpChange, activeTabProp = 'home' }) =
   const handleCloseForm = () => {
     setIsDropFormOpen(false);
     setEditingDrop(null);
+  };
+  
+  const handleCloseDetails = () => {
+    setViewingDrop(null);
+    setShowRsvpExpanded(false);
   };
 
   // Format drops by date
@@ -139,7 +154,7 @@ const HomePage = ({ drops, onSaveDrop, onRsvpChange, activeTabProp = 'home' }) =
               <DropCard 
                 key={drop.id} 
                 drop={drop} 
-                onClick={() => handleEditDrop(drop)}
+                onClick={() => handleViewDrop(drop)}
                 onRsvpChange={(status, note, photoLink) => onRsvpChange && onRsvpChange(drop.id, status, note, photoLink)}
               />
             ))}
@@ -149,10 +164,32 @@ const HomePage = ({ drops, onSaveDrop, onRsvpChange, activeTabProp = 'home' }) =
       
       <DropForm 
         isOpen={isDropFormOpen}
-        onClose={handleCloseForm}
+        onClose={handleCloseForm} 
         onSave={onSaveDrop}
         initialDrop={editingDrop}
       />
+      
+      {viewingDrop && (
+        <DropDetails
+          drop={viewingDrop}
+          onClose={handleCloseDetails}
+          onEditClick={() => handleEditDrop(viewingDrop)}
+          onRsvpChange={(status, note, photoLink) => {
+            if (onRsvpChange) {
+              onRsvpChange(viewingDrop.id, status, note, photoLink);
+              // Update the local viewing drop to reflect changes immediately
+              setViewingDrop({
+                ...viewingDrop,
+                yourRsvp: status,
+                rsvpNote: note,
+                photoLink: photoLink !== undefined ? photoLink : viewingDrop.photoLink
+              });
+            }
+          }}
+          showRsvpExpanded={showRsvpExpanded}
+          setShowRsvpExpanded={setShowRsvpExpanded}
+        />
+      )}
     </div>
   );
 };

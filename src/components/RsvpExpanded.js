@@ -70,34 +70,7 @@ const RsvpExpanded = ({
         backgroundColor: '#e2e8f0'
       }
     },
-    rsvpOptions: {
-      display: 'flex',
-      gap: '8px',
-      marginBottom: '16px'
-    },
-    rsvpOption: (status, isActive) => ({
-      flex: 1,
-      padding: '10px',
-      borderRadius: '8px',
-      backgroundColor: isActive ? getRsvpColor(status, true) : '#fff',
-      color: isActive ? '#fff' : '#64748b',
-      border: isActive ? 'none' : '1px solid #e2e8f0',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      cursor: 'pointer',
-      transition: 'all 0.15s ease',
-      opacity: isActive ? 1 : 0.9
-    }),
-    optionIcon: {
-      fontSize: '20px',
-      marginBottom: '6px'
-    },
-    optionText: {
-      fontSize: '14px',
-      fontWeight: '600'
-    },
+
     noteSection: {
       marginBottom: '16px'
     },
@@ -239,33 +212,11 @@ const RsvpExpanded = ({
   return (
     <div style={styles.container}>
       <div style={styles.header}>
-        <h3 style={styles.title}>Update Your RSVP</h3>
+        <h3 style={styles.title}>RSVP Details</h3>
         <button style={styles.closeButton} onClick={onClose}>×</button>
       </div>
       
-      <div style={styles.rsvpOptions}>
-        <div 
-          style={styles.rsvpOption(RSVP_STATUS.GOING, currentStatus === RSVP_STATUS.GOING)}
-          onClick={() => onStatusChange(RSVP_STATUS.GOING)}
-        >
-          <span style={styles.optionIcon}>{getRsvpIcon(RSVP_STATUS.GOING)}</span>
-          <span style={styles.optionText}>Going</span>
-        </div>
-        <div 
-          style={styles.rsvpOption(RSVP_STATUS.MAYBE, currentStatus === RSVP_STATUS.MAYBE)}
-          onClick={() => onStatusChange(RSVP_STATUS.MAYBE)}
-        >
-          <span style={styles.optionIcon}>{getRsvpIcon(RSVP_STATUS.MAYBE)}</span>
-          <span style={styles.optionText}>Maybe</span>
-        </div>
-        <div 
-          style={styles.rsvpOption(RSVP_STATUS.NOT_GOING, currentStatus === RSVP_STATUS.NOT_GOING)}
-          onClick={() => onStatusChange(RSVP_STATUS.NOT_GOING)}
-        >
-          <span style={styles.optionIcon}>{getRsvpIcon(RSVP_STATUS.NOT_GOING)}</span>
-          <span style={styles.optionText}>No</span>
-        </div>
-      </div>
+
       
       <div style={styles.noteSection}>
         <label style={styles.noteLabel} htmlFor="rsvp-note">Add a note (optional)</label>

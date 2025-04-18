@@ -1,25 +1,25 @@
 import React from 'react';
 import { RSVP_STATUS } from '../data/sampleDrops';
 
-const RsvpButtons = ({ currentStatus, onStatusChange, onExpandClick }) => {
+const RsvpButtons = ({ currentStatus, onStatusChange, isEnabled = true }) => {
   const styles = {
     container: {
       marginTop: '12px',
-      borderTop: '1px solid #f1f5f9',
       paddingTop: '12px',
       display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center'
+      flexDirection: 'column',
+      gap: '12px'
     },
     buttonsGroup: {
       display: 'flex',
-      gap: '8px'
+      gap: '10px',
+      width: '100%'
     },
     rsvpButton: (status, isActive) => ({
-      padding: '6px 12px',
-      borderRadius: '8px',
+      padding: '10px 16px',
+      borderRadius: '10px',
       border: 'none',
-      fontSize: '13px',
+      fontSize: '15px',
       fontWeight: isActive ? '600' : '500',
       cursor: 'pointer',
       transition: 'all 0.15s ease',
@@ -28,25 +28,10 @@ const RsvpButtons = ({ currentStatus, onStatusChange, onExpandClick }) => {
       border: isActive ? 'none' : '1px solid #e2e8f0',
       display: 'flex',
       alignItems: 'center',
-      gap: '4px'
+      justifyContent: 'center',
+      gap: '6px',
+      flex: 1
     }),
-    expandButton: {
-      backgroundColor: 'transparent',
-      border: 'none',
-      color: '#64748b',
-      fontSize: '13px',
-      fontWeight: '500',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '4px',
-      cursor: 'pointer',
-      padding: '6px 8px',
-      borderRadius: '6px',
-      transition: 'background-color 0.15s ease',
-      ':hover': {
-        backgroundColor: '#f1f5f9'
-      }
-    },
     statusIndicator: {
       display: 'inline-block',
       width: '8px',
@@ -102,15 +87,7 @@ const RsvpButtons = ({ currentStatus, onStatusChange, onExpandClick }) => {
         </button>
       </div>
       
-      <button 
-        style={styles.expandButton}
-        onClick={onExpandClick}
-      >
-        Details
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M6 12L10 8L6 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </button>
+
     </div>
   );
 };

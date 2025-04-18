@@ -363,8 +363,36 @@ const DropCard = ({ drop, onClick, onRsvpChange }) => {
               onRsvpChange(newStatus, rsvpNote);
             }
           }}
-          onExpandClick={() => setShowRsvpExpanded(!showRsvpExpanded)}
         />
+        
+        <div style={{display: 'flex', justifyContent: 'flex-end', marginTop: '8px'}}>
+          <button 
+            style={{
+              backgroundColor: 'transparent',
+              border: 'none',
+              color: '#64748b',
+              fontSize: '13px',
+              fontWeight: '500',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              cursor: 'pointer',
+              padding: '6px 8px',
+              borderRadius: '6px',
+              transition: 'background-color 0.15s ease',
+            }}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setShowRsvpExpanded(!showRsvpExpanded);
+            }}
+          >
+            {showRsvpExpanded ? 'Less' : 'Add Note'}
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d={showRsvpExpanded ? "M12 10L8 6L4 10" : "M6 12L10 8L6 4"} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        </div>
         
         {showRsvpExpanded && (
           <RsvpExpanded 
