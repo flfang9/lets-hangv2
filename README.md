@@ -1,18 +1,28 @@
-# Getting Started with Create React App
+# Let's Hang
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A modern, mobile-first social event planning app inspired by iOS design principles. Create, manage, and share your events with friends easily.
 
-## Available Scripts
+![Let's Hang App](https://via.placeholder.com/600x300?text=Let%27s+Hang+App)
 
-In the project directory, you can run:
+## Features
 
-### `npm start`
+- **Clean, Mobile-First Design**: iOS-inspired UI with attention to spacing and typography
+- **Color-Coded Event Cards**: Events with visual "vibe" indicators (chill, silly, sweaty, talky, spontaneous)
+- **Local Storage**: Event data persists between sessions
+- **Intuitive Event Creation**: Simple form with emoji picker
+- **Tab Navigation**: Easy access to upcoming and past events
 
-Runs the app in the development mode.\
+## Getting Started
+
+```bash
+# Install dependencies
+npm install
+
+# Start development server
+npm start
+```
+
 Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
-
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
 
 ### `npm test`
 
