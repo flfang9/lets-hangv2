@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import RsvpButtons from './RsvpButtons';
 import RsvpExpanded from './RsvpExpanded';
 import { RSVP_STATUS } from '../data/sampleDrops';
@@ -67,6 +67,26 @@ const DropDetails = ({
       spontaneous: '⚡️'
     };
     return vibeEmojis[vibe] || '👀';
+  };
+  
+  const [copied, setCopied] = useState(false);
+  
+  // Generate shareable link
+  const getShareableLink = () => {
+    const baseUrl = window.location.origin;
+    return `${baseUrl}/event/${drop.id}`;
+  };
+  
+  // Handle copy to clipboard
+  const handleCopyLink = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const link = getShareableLink();
+    navigator.clipboard.writeText(link).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
   };
   
   const styles = {
@@ -213,6 +233,34 @@ const DropDetails = ({
       marginTop: '16px',
       display: 'inline-block'
     },
+    shareButton: {
+      backgroundColor: '#f1f5f9',
+      color: '#64748b',
+      border: 'none',
+      borderRadius: '8px',
+      padding: '8px 16px',
+      fontWeight: '500',
+      fontSize: '14px',
+      cursor: 'pointer',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '6px',
+      transition: 'background-color 0.15s ease',
+    },
+    shareButtonCopied: {
+      backgroundColor: '#dcfce7',
+      color: '#16a34a',
+      border: 'none',
+      borderRadius: '8px',
+      padding: '8px 16px',
+      fontWeight: '500',
+      fontSize: '14px',
+      cursor: 'pointer',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '6px',
+      transition: 'background-color 0.15s ease',
+    },
     actions: {
       display: 'flex',
       justifyContent: 'flex-end',
@@ -349,6 +397,28 @@ const DropDetails = ({
         </div>
         
         <div style={styles.actions}>
+          <button 
+            style={copied ? styles.shareButtonCopied : styles.shareButton}
+            onClick={handleCopyLink}
+          >
+            {copied ? (
+              <>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                Copied!
+              </>
+            ) : (
+              <>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                Share
+              </>
+            )}
+          </button>
+          
           {isHost && (
             <button 
               style={styles.editButton} 
