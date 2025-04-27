@@ -6,7 +6,7 @@ import { RSVP_STATUS } from '../data/sampleDrops';
 const DropDetails = ({ 
   drop, 
   onClose, 
-  onEditClick, 
+  onEdit, 
   onRsvpChange,
   showRsvpExpanded,
   setShowRsvpExpanded
@@ -70,6 +70,7 @@ const DropDetails = ({
   };
   
   const [copied, setCopied] = useState(false);
+  const [showShareOptions, setShowShareOptions] = useState(false);
   
   // Generate shareable link
   const getShareableLink = () => {
@@ -77,16 +78,81 @@ const DropDetails = ({
     return `${baseUrl}/event/${drop.id}`;
   };
   
-  // Handle copy to clipboard
+  // Generate formatted event text for sharing
+  const getFormattedEventText = () => {
+    const eventDate = new Date(date);
+    const formattedDate = eventDate.toLocaleString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit'
+    });
+    
+    return `${emoji} ${title}\n📅 ${formattedDate}\n📍 ${location}\n\nRSVP here: ${getShareableLink()}`;
+  };
+  
+  // Handle copy link to clipboard
   const handleCopyLink = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     
     const link = getShareableLink();
     navigator.clipboard.writeText(link).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+      setShowShareOptions(false);
     });
+  };
+  
+  // Handle copy formatted text to clipboard
+  const handleCopyText = (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
+    const formattedText = getFormattedEventText();
+    navigator.clipboard.writeText(formattedText).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      setShowShareOptions(false);
+    });
+  };
+  
+  // Handle share via iMessage
+  const handleShareViaiMessage = (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
+    const formattedText = encodeURIComponent(getFormattedEventText());
+    window.location.href = `sms:&body=${formattedText}`;
+    setShowShareOptions(false);
+  };
+  
+  // Handle Web Share API if available
+  const handleWebShare = (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
+    if (navigator.share) {
+      navigator.share({
+        title: title,
+        text: getFormattedEventText(),
+        url: getShareableLink()
+      })
+      .then(() => setShowShareOptions(false))
+      .catch(err => console.error('Error sharing:', err));
+    } else {
+      // Fallback to showing options if Web Share API not available
+      setShowShareOptions(true);
+    }
   };
   
   const styles = {
@@ -261,6 +327,72 @@ const DropDetails = ({
       gap: '6px',
       transition: 'background-color 0.15s ease',
     },
+    shareOptionsOverlay: {
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 2000
+    },
+    shareOptionsContainer: {
+      backgroundColor: 'white',
+      borderRadius: '12px',
+      width: '90%',
+      maxWidth: '360px',
+      padding: '20px',
+      boxShadow: '0 10px 25px rgba(0, 0, 0, 0.15)'
+    },
+    shareOptionsHeader: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: '16px'
+    },
+    shareOptionsTitle: {
+      fontSize: '18px',
+      fontWeight: '600',
+      color: '#1f2937'
+    },
+    shareOptionsCloseButton: {
+      border: 'none',
+      background: 'none',
+      fontSize: '24px',
+      color: '#64748b',
+      cursor: 'pointer'
+    },
+    shareOptionsList: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '10px'
+    },
+    shareOption: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '12px',
+      padding: '12px 16px',
+      backgroundColor: '#f8fafc',
+      border: '1px solid #e2e8f0',
+      borderRadius: '8px',
+      cursor: 'pointer',
+      transition: 'background-color 0.15s ease'
+    },
+    shareOptionIcon: {
+      width: '24px',
+      height: '24px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    },
+    shareOptionText: {
+      fontSize: '16px',
+      fontWeight: '500',
+      color: '#334155'
+    },
     actions: {
       display: 'flex',
       justifyContent: 'flex-end',
@@ -399,7 +531,7 @@ const DropDetails = ({
         <div style={styles.actions}>
           <button 
             style={copied ? styles.shareButtonCopied : styles.shareButton}
-            onClick={handleCopyLink}
+            onClick={handleWebShare}
           >
             {copied ? (
               <>
@@ -411,8 +543,7 @@ const DropDetails = ({
             ) : (
               <>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M18 8a3 3 0 100-6 3 3 0 000 6zM6 15a3 3 0 100-6 3 3 0 000 6zM18 22a3 3 0 100-6 3 3 0 000 6zM8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
                 Share
               </>
@@ -425,17 +556,56 @@ const DropDetails = ({
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                if (onEditClick) onEditClick();
+                if (onEdit) onEdit();
               }}
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M11.333 2.33301C11.5086 2.15741 11.7573 2.05713 12.0167 2.05713C12.276 2.05713 12.5247 2.15741 12.7003 2.33301C12.8759 2.5086 12.9762 2.75732 12.9762 3.01668C12.9762 3.27603 12.8759 3.52476 12.7003 3.70035L4.93367 11.467L3.33301 11.9997L3.86634 10.399L11.333 2.33301Z" stroke="currentColor" strokeWidth="1.33333" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
-              Edit Event
+              Edit Hang
             </button>
           )}
         </div>
       </div>
+
+      {showShareOptions && (
+        <div style={styles.shareOptionsOverlay} onClick={() => setShowShareOptions(false)}>
+          <div style={styles.shareOptionsContainer} onClick={(e) => e.stopPropagation()}>
+            <div style={styles.shareOptionsHeader}>
+              <h3 style={styles.shareOptionsTitle}>Share this event</h3>
+              <button style={styles.shareOptionsCloseButton} onClick={() => setShowShareOptions(false)}>×</button>
+            </div>
+            <div style={styles.shareOptionsList}>
+              <div style={styles.shareOption} onClick={handleShareViaiMessage}>
+                <div style={styles.shareOptionIcon}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M8 9h8M8 12h6M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="#34D399" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <span style={styles.shareOptionText}>Share via iMessage</span>
+              </div>
+              <div style={styles.shareOption} onClick={handleCopyText}>
+                <div style={styles.shareOptionIcon}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2" stroke="#60A5FA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M15 2H9a1 1 0 00-1 1v2a1 1 0 001 1h6a1 1 0 001-1V3a1 1 0 00-1-1z" stroke="#60A5FA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <span style={styles.shareOptionText}>Copy event details</span>
+              </div>
+              <div style={styles.shareOption} onClick={handleCopyLink}>
+                <div style={styles.shareOptionIcon}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" stroke="#8B5CF6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" stroke="#8B5CF6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <span style={styles.shareOptionText}>Copy link</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

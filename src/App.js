@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import HomePage from './pages/HomePage';
+import FriendsPage from './pages/FriendsPage';
 import sampleDrops from './data/sampleDrops';
+import { initViewportFix } from './utils/viewportFix';
+import './styles/responsive.css';
 
 function App() {
   // Local state to store drops
@@ -10,6 +13,9 @@ function App() {
 
   // Load drops from localStorage on initial render
   useEffect(() => {
+    // Initialize the viewport fix for mobile
+    initViewportFix();
+    
     // Force load sample data (comment this out later if you want to keep user data)
     setDrops(sampleDrops);
     localStorage.setItem('drops', JSON.stringify(sampleDrops));
@@ -98,13 +104,12 @@ function App() {
 
   const styles = {
     container: {
-      minHeight: '100vh',
-      backgroundColor: '#f8fafc',
-      padding: '16px',
-      maxWidth: '500px',
+      width: '100%',
       margin: '0 auto',
-      display: 'flex',
-      flexDirection: 'column'
+      padding: '16px',
+      paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))',
+      fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+      maxWidth: '600px',
     },
     content: {
       flex: 1,
@@ -123,6 +128,34 @@ function App() {
       zIndex: 50,
       maxWidth: '500px',
       margin: '0 auto'
+    },
+    tabs: {
+      display: 'flex',
+      marginBottom: '20px',
+      borderBottom: '1px solid #e2e8f0',
+      overflowX: 'auto',
+      WebkitOverflowScrolling: 'touch',
+      scrollbarWidth: 'none', /* Firefox */
+      msOverflowStyle: 'none', /* Internet Explorer/Edge */
+    },
+    tabButton: {
+      background: 'none',
+      border: 'none',
+      padding: '12px 20px',
+      fontSize: '16px',
+      fontWeight: '500',
+      color: '#64748b',
+      cursor: 'pointer',
+      transition: 'all 0.2s ease',
+      borderBottom: '2px solid transparent',
+      marginRight: '8px',
+      minHeight: '44px', /* Touch-friendly size */
+      whiteSpace: 'nowrap',
+      WebkitTapHighlightColor: 'transparent', /* Remove tap highlight on iOS */
+    },
+    activeTab: {
+      borderBottom: '2px solid #2563eb',
+      color: '#2563eb',
     },
     navButton: (isActive) => ({
       display: 'flex',
@@ -157,29 +190,47 @@ function App() {
             onSaveDrop={handleSaveDrop} 
             onRsvpChange={handleRsvpChange}
             activeTabProp={activeTab}
+            onTogglePastView={setActiveTab}
           />
         );
       // Photos tab removed
       case 'friends':
-        return (
-          <div style={{ textAlign: 'center', padding: '40px 16px' }}>
-            <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '16px' }}>Friends</h2>
-            <p style={{ color: '#64748b' }}>Friends feature coming soon!</p>
-          </div>
-        );
+        return <FriendsPage />;
       default:
         return <HomePage drops={drops} onSaveDrop={handleSaveDrop} />;
     }
   };
 
   return (
-    <div style={styles.container}>
+    <div style={styles.container} className="has-bottom-nav">
+      <div style={styles.tabs}>
+        <button 
+          style={{...styles.tabButton, ...(activeTab === 'home' ? styles.activeTab : {})}}
+          onClick={() => setActiveTab('home')}
+          className="touch-button"
+        >
+          Home
+        </button>
+        <button 
+          style={{...styles.tabButton, ...(activeTab === 'past' ? styles.activeTab : {})}}
+          onClick={() => setActiveTab('past')}
+          className="touch-button"
+        >
+          <div style={{display: 'flex', alignItems: 'center', gap: '4px'}}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M12 6v6l4 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Past
+          </div>
+        </button>
+      </div>
       <div style={styles.content}>
         {renderTabContent()}
       </div>
 
-      {/* Bottom Navigation */}
-      <div style={styles.navigation}>
+      {/* Desktop Navigation (hidden on mobile) */}
+      <div style={styles.navigation} className="desktop-only">
         <button 
           style={styles.navButton(activeTab === 'home')} 
           onClick={() => setActiveTab('home')}
@@ -205,6 +256,74 @@ function App() {
         >
           <svg style={styles.navIcon} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+          <span>Friends</span>
+        </button>
+      </div>
+      
+      {/* Mobile bottom navigation */}
+      <div className="mobile-nav mobile-only">
+        <button 
+          onClick={() => setActiveTab('home')} 
+          style={{
+            color: activeTab === 'home' ? '#2563eb' : '#64748b',
+            background: 'none',
+            border: 'none',
+            fontSize: '12px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            padding: '8px 0',
+            width: '33%',
+            WebkitTapHighlightColor: 'transparent'
+          }}
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke={activeTab === 'home' ? '#2563eb' : '#64748b'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M9 22V12h6v10" stroke={activeTab === 'home' ? '#2563eb' : '#64748b'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          <span>Home</span>
+        </button>
+        <button 
+          onClick={() => setActiveTab('create')} 
+          style={{
+            color: activeTab === 'create' ? '#2563eb' : '#64748b',
+            background: 'none',
+            border: 'none',
+            fontSize: '12px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            padding: '8px 0',
+            width: '33%',
+            WebkitTapHighlightColor: 'transparent'
+          }}
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="10" stroke={activeTab === 'create' ? '#2563eb' : '#64748b'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M12 8v8M8 12h8" stroke={activeTab === 'create' ? '#2563eb' : '#64748b'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          <span>Create</span>
+        </button>
+        <button 
+          onClick={() => setActiveTab('friends')} 
+          style={{
+            color: activeTab === 'friends' ? '#2563eb' : '#64748b',
+            background: 'none',
+            border: 'none',
+            fontSize: '12px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            padding: '8px 0',
+            width: '33%',
+            WebkitTapHighlightColor: 'transparent'
+          }}
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke={activeTab === 'friends' ? '#2563eb' : '#64748b'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <circle cx="9" cy="7" r="4" stroke={activeTab === 'friends' ? '#2563eb' : '#64748b'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke={activeTab === 'friends' ? '#2563eb' : '#64748b'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
           <span>Friends</span>
         </button>

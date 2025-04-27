@@ -4,7 +4,7 @@ import CreateButton from '../components/CreateButton';
 import DropForm from '../components/DropForm';
 import DropDetails from '../components/DropDetails';
 
-const HomePage = ({ drops, onSaveDrop, onRsvpChange, activeTabProp = 'home' }) => {
+const HomePage = ({ drops, onSaveDrop, onRsvpChange, activeTabProp = 'home', onTogglePastView }) => {
   const [isDropFormOpen, setIsDropFormOpen] = useState(false);
   const [editingDrop, setEditingDrop] = useState(null);
   const [viewingDrop, setViewingDrop] = useState(null);
@@ -15,6 +15,17 @@ const HomePage = ({ drops, onSaveDrop, onRsvpChange, activeTabProp = 'home' }) =
   const handleOpenCreateForm = () => {
     setEditingDrop(null);
     setIsDropFormOpen(true);
+  };
+
+  const handleSaveDrop = (drop) => {
+    onSaveDrop(drop);
+    handleCloseForm();
+  };
+
+  const handleRsvpStatusChange = (dropId, status, note, photoLink) => {
+    if (onRsvpChange) {
+      onRsvpChange(dropId, status, note, photoLink);
+    }
   };
 
   const handleViewDrop = (drop) => {
@@ -49,6 +60,14 @@ const HomePage = ({ drops, onSaveDrop, onRsvpChange, activeTabProp = 'home' }) =
 
   // Determine which drops to display based on active tab
   const dropsToDisplay = activeTab === 'home' ? upcomingDrops : pastDrops;
+  
+  // Handler for toggling between upcoming and past events within HomePage
+  const togglePastEvents = () => {
+    // Use the parent's setter if we're working with active tab from parent
+    if (onTogglePastView) {
+      onTogglePastView(activeTab === 'home' ? 'past' : 'home');
+    }
+  };
 
   const styles = {
     container: {
@@ -128,52 +147,33 @@ const HomePage = ({ drops, onSaveDrop, onRsvpChange, activeTabProp = 'home' }) =
       display: 'flex',
       flexDirection: 'column',
       gap: '12px'
+    },
+    pastButton: {
+      display: 'flex',
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: '4px',
+      fontSize: '12px',
+      padding: '8px 24px',
+      borderRadius: '8px',
+      border: 'none',
+      cursor: 'pointer'
     }
   };
   
   return (
     <div style={styles.container}>
-      <header style={styles.header}>
-        <h1 style={styles.title}>Let's Hang</h1>
-      </header>
-
-      <main style={styles.main}>
-        <CreateButton onClick={handleOpenCreateForm} isInline={true} />
-        <h2 style={styles.sectionTitle}>
-          {activeTab === 'home' ? 'Upcoming Drops' : 'Past Drops'}
-        </h2>
-        {dropsToDisplay.length === 0 ? (
-          <div style={styles.emptyState}>
-            <p style={styles.emptyText}>
-              {activeTab === 'home' ? 'No upcoming drops. Create one!' : 'No past drops.'}
-            </p>
-          </div>
-        ) : (
-          <div style={styles.dropsList}>
-            {dropsToDisplay.map((drop) => (
-              <DropCard 
-                key={drop.id} 
-                drop={drop} 
-                onClick={() => handleViewDrop(drop)}
-                onRsvpChange={(status, note, photoLink) => onRsvpChange && onRsvpChange(drop.id, status, note, photoLink)}
-              />
-            ))}
-          </div>
-        )}
-      </main>
-      
-      <DropForm 
-        isOpen={isDropFormOpen}
-        onClose={handleCloseForm} 
-        onSave={onSaveDrop}
-        initialDrop={editingDrop}
-      />
-      
-      {viewingDrop && (
-        <DropDetails
-          drop={viewingDrop}
-          onClose={handleCloseDetails}
-          onEditClick={() => handleEditDrop(viewingDrop)}
+      {isDropFormOpen ? (
+        <DropForm 
+          onSave={handleSaveDrop} 
+          onClose={handleCloseForm} 
+          initialDrop={editingDrop}
+        />
+      ) : viewingDrop ? (
+        <DropDetails 
+          drop={viewingDrop} 
+          onClose={handleCloseDetails} 
+          onEdit={() => handleEditDrop(viewingDrop)}
           onRsvpChange={(status, note, photoLink) => {
             if (onRsvpChange) {
               onRsvpChange(viewingDrop.id, status, note, photoLink);
@@ -187,8 +187,41 @@ const HomePage = ({ drops, onSaveDrop, onRsvpChange, activeTabProp = 'home' }) =
             }
           }}
           showRsvpExpanded={showRsvpExpanded}
-          setShowRsvpExpanded={setShowRsvpExpanded}
+          onToggleRsvpExpanded={() => setShowRsvpExpanded(!showRsvpExpanded)}
         />
+      ) : (
+        <>
+          {/* Header removed to streamline UI */}
+          
+          <div style={styles.main}>
+            <h2 style={styles.sectionTitle}>
+              {activeTab === 'home' ? 'Upcoming Hangs' : 'Past Hangs'}
+            </h2>
+            
+            {activeTab === 'home' && (
+              <CreateButton onClick={handleOpenCreateForm} isInline={true} />
+            )}
+            
+            {dropsToDisplay.length === 0 ? (
+              <div style={styles.emptyState}>
+                <p style={styles.emptyText}>
+                  {activeTab === 'home' ? 'No upcoming hangs. Create one!' : 'No past hangs found.'}
+                </p>
+              </div>
+            ) : (
+              <div style={styles.dropsList}>
+                {dropsToDisplay.map((drop) => (
+                  <DropCard 
+                    key={drop.id} 
+                    drop={drop} 
+                    onClick={() => handleViewDrop(drop)}
+                    onRsvpChange={onRsvpChange}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </>
       )}
     </div>
   );

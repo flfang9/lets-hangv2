@@ -43,9 +43,9 @@ const CreateButton = ({ onClick, isInline = false }) => {
       style={styles.button}
       onMouseOver={(e) => e.currentTarget.style.backgroundColor = styles.buttonHover.backgroundColor}
       onMouseOut={(e) => e.currentTarget.style.backgroundColor = styles.button.backgroundColor}
-      aria-label="Create new drop"
+      aria-label="Create new hang"
     >
-      <span>+ CREATE DROP</span>
+      <span>+ CREATE HANG</span>
     </button>
   );
 };

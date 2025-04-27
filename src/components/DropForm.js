@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import sampleFriends from '../data/sampleFriends';
+import sampleFriendGroups from '../data/sampleFriendGroups';
 
 const DropForm = ({ isOpen, onClose, onSave, initialDrop }) => {
+  const [friends] = useState(sampleFriends);
+  const [friendGroups] = useState(sampleFriendGroups);
+  const [selectedFriends, setSelectedFriends] = useState([]);
+  const [selectedGroups, setSelectedGroups] = useState([]);
   const [drop, setDrop] = useState({
     emoji: '🎉',
     title: '',
@@ -8,12 +14,17 @@ const DropForm = ({ isOpen, onClose, onSave, initialDrop }) => {
     location: '',
     friendsCount: 0,
     isHost: true,
-    vibe: 'chill'
+    vibe: 'chill',
+    friends: []
   });
 
   useEffect(() => {
     if (initialDrop) {
       setDrop(initialDrop);
+      // If editing an existing drop, set the selected friends
+      if (initialDrop.friends && initialDrop.friends.length > 0) {
+        setSelectedFriends(initialDrop.friends);
+      }
     } else {
       setDrop({
         emoji: '🎉',
@@ -22,8 +33,11 @@ const DropForm = ({ isOpen, onClose, onSave, initialDrop }) => {
         location: '',
         friendsCount: 0,
         isHost: true,
-        vibe: 'chill'
+        vibe: 'chill',
+        friends: []
       });
+      setSelectedFriends([]);
+      setSelectedGroups([]);
     }
   }, [initialDrop, isOpen]);
 
@@ -42,11 +56,76 @@ const DropForm = ({ isOpen, onClose, onSave, initialDrop }) => {
     setDrop((prev) => ({ ...prev, vibe }));
   };
 
+  // Toggle friend selection
+  const toggleFriendSelection = (friendName) => {
+    setSelectedFriends(prev => 
+      prev.includes(friendName)
+        ? prev.filter(name => name !== friendName)
+        : [...prev, friendName]
+    );
+  };
+
+  // Toggle group selection and add/remove all members
+  const toggleGroupSelection = (groupId) => {
+    // Check if group is already selected
+    const isGroupSelected = selectedGroups.includes(groupId);
+    
+    // Find the group
+    const group = friendGroups.find(g => g.id === groupId);
+    if (!group) return;
+    
+    if (isGroupSelected) {
+      // Unselect the group
+      setSelectedGroups(prev => prev.filter(id => id !== groupId));
+      
+      // Get group member names
+      const memberIds = group.members;
+      const memberNames = friends
+        .filter(friend => memberIds.includes(friend.id))
+        .map(friend => friend.name);
+      
+      // Remove friends that are only in this group and not in other selected groups
+      const otherGroupMemberIds = selectedGroups
+        .filter(id => id !== groupId)
+        .flatMap(id => {
+          const g = friendGroups.find(g => g.id === id);
+          return g ? g.members : [];
+        });
+      
+      const otherGroupMemberNames = friends
+        .filter(friend => otherGroupMemberIds.includes(friend.id))
+        .map(friend => friend.name);
+      
+      // Keep friends that are in other selected groups
+      setSelectedFriends(prev => 
+        prev.filter(name => 
+          !memberNames.includes(name) || otherGroupMemberNames.includes(name)
+        )
+      );
+    } else {
+      // Select the group
+      setSelectedGroups(prev => [...prev, groupId]);
+      
+      // Get friend names from the group member IDs
+      const memberNames = friends
+        .filter(friend => group.members.includes(friend.id))
+        .map(friend => friend.name);
+      
+      // Add all the members to selected friends (without duplicates)
+      setSelectedFriends(prev => {
+        const combined = [...prev, ...memberNames];
+        return [...new Set(combined)]; // Remove duplicates
+      });
+    }
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     onSave({
       ...drop,
-      id: initialDrop?.id || Date.now().toString()
+      id: initialDrop?.id || Date.now().toString(),
+      friends: selectedFriends,
+      friendsCount: selectedFriends.length
     });
     onClose();
   };
@@ -140,64 +219,95 @@ const DropForm = ({ isOpen, onClose, onSave, initialDrop }) => {
       alignItems: 'center',
       marginTop: '4px'
     },
-    emojiPreview: {
-      fontSize: '24px',
-      marginRight: '8px'
-    },
-    emojiLabel: {
-      fontSize: '12px',
-      color: '#6b7280'
-    },
     input: {
       width: '100%',
       padding: '12px 16px',
-      border: '1px solid #e5e7eb',
       borderRadius: '12px',
+      border: '1px solid #e5e7eb',
       fontSize: '16px',
-      outlineColor: '#2563eb'
+      boxSizing: 'border-box'
     },
     vibeGrid: {
-      display: 'grid',
-      gridTemplateColumns: 'repeat(3, 1fr)',
+      display: 'flex',
+      flexWrap: 'wrap',
       gap: '8px'
     },
-    vibeButton: (vibe, selected) => ({
-      padding: '8px',
-      fontSize: '12px',
-      border: `1px solid ${selected ? vibe.borderColor : '#e5e7eb'}`,
-      borderRadius: '12px',
-      backgroundColor: selected ? vibe.bgColor : 'transparent',
-      color: selected ? vibe.textColor : '#4b5563',
-      transition: 'all 0.2s ease',
+    vibeButton: (isSelected, vibe) => ({
+      display: 'flex',
+      alignItems: 'center',
+      padding: '8px 12px',
+      borderRadius: '16px',
+      backgroundColor: isSelected ? vibe.bgColor : 'white',
+      border: `1px solid ${isSelected ? vibe.borderColor : '#e5e7eb'}`,
+      color: isSelected ? vibe.textColor : '#6b7280',
+      fontWeight: isSelected ? 600 : 500,
+      fontSize: '14px',
       cursor: 'pointer'
     }),
-    buttonGroup: {
+    friendsSections: {
       display: 'flex',
-      gap: '8px',
-      marginTop: '16px'
+      flexDirection: 'column',
+      gap: '16px'
     },
-    cancelButton: {
-      flex: 1,
-      padding: '12px 0',
-      color: '#4b5563',
-      fontWeight: 500,
-      borderRadius: '12px',
-      border: '1px solid #e5e7eb',
-      backgroundColor: 'transparent',
-      cursor: 'pointer',
-      transition: 'background-color 0.2s ease'
+    friendsHeader: {
+      fontWeight: 600,
+      fontSize: '16px',
+      color: '#374151',
+      marginBottom: '8px'
+    },
+    groupsList: {
+      display: 'flex',
+      flexWrap: 'wrap',
+      gap: '8px'
+    },
+    groupButton: (isSelected) => ({
+      display: 'flex',
+      alignItems: 'center',
+      gap: '4px',
+      padding: '6px 12px',
+      borderRadius: '16px',
+      backgroundColor: isSelected ? '#eff6ff' : 'white',
+      border: `1px solid ${isSelected ? '#93c5fd' : '#e5e7eb'}`,
+      color: isSelected ? '#1e40af' : '#4b5563',
+      fontWeight: isSelected ? 600 : 500,
+      fontSize: '14px',
+      cursor: 'pointer'
+    }),
+    groupEmoji: {
+      marginRight: '4px'
+    },
+    friendsList: {
+      maxHeight: '200px',
+      overflowY: 'auto',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '8px',
+      padding: '4px 0'
+    },
+    friendItem: (isSelected) => ({
+      display: 'flex',
+      alignItems: 'center',
+      padding: '8px 12px',
+      borderRadius: '10px',
+      backgroundColor: isSelected ? '#f3f4f6' : 'white',
+      border: `1px solid ${isSelected ? '#d1d5db' : '#e5e7eb'}`,
+      cursor: 'pointer'
+    }),
+    friendName: {
+      marginLeft: '8px',
+      fontSize: '14px',
+      color: '#374151'
     },
     submitButton: {
-      flex: 1,
-      padding: '12px 0',
       backgroundColor: '#2563eb',
       color: 'white',
-      fontWeight: 500,
-      borderRadius: '12px',
       border: 'none',
-      boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+      borderRadius: '12px',
+      padding: '12px 24px',
+      fontSize: '16px',
+      fontWeight: 600,
       cursor: 'pointer',
-      transition: 'background-color 0.2s ease'
+      marginTop: '16px'
     }
   };
 
@@ -205,59 +315,48 @@ const DropForm = ({ isOpen, onClose, onSave, initialDrop }) => {
     <div style={styles.overlay}>
       <div style={styles.modal}>
         <div style={styles.header}>
-          <h2 style={styles.title}>
-            {initialDrop ? 'Edit Drop' : 'Create Drop'}
-          </h2>
-          <button 
-            onClick={onClose}
-            style={styles.closeButton}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" style={styles.closeIcon} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+          <h2 style={styles.title}>{initialDrop ? 'Edit Hang' : 'Create Hang'}</h2>
+          <button style={styles.closeButton} onClick={onClose}>
+            ×
           </button>
         </div>
-
         <form onSubmit={handleSubmit} style={styles.form}>
+          {/* Emoji selection */}
           <div style={styles.fieldGroup}>
-            <label style={styles.label}>Emoji</label>
+            <label style={styles.label}>Pick an emoji</label>
             <div style={styles.emojiGrid}>
               {commonEmojis.map((emoji) => (
                 <button
                   key={emoji}
                   type="button"
+                  style={styles.emojiButton(emoji === drop.emoji)}
                   onClick={() => handleEmojiSelect(emoji)}
-                  style={styles.emojiButton(drop.emoji === emoji)}
                 >
                   {emoji}
                 </button>
               ))}
             </div>
-            <div style={styles.selectedEmoji}>
-              <span style={styles.emojiPreview}>{drop.emoji}</span>
-              <span style={styles.emojiLabel}>Selected emoji</span>
-            </div>
           </div>
 
+          {/* Title field */}
           <div style={styles.fieldGroup}>
-            <label htmlFor="title" style={styles.label}>Title</label>
+            <label style={styles.label}>Title</label>
             <input
               type="text"
-              id="title"
               name="title"
               value={drop.title}
               onChange={handleChange}
+              placeholder="What's the plan?"
               style={styles.input}
-              placeholder="What's happening?"
               required
             />
           </div>
 
+          {/* Date and time */}
           <div style={styles.fieldGroup}>
-            <label htmlFor="date" style={styles.label}>Date & Time</label>
+            <label style={styles.label}>When?</label>
             <input
               type="datetime-local"
-              id="date"
               name="date"
               value={drop.date}
               onChange={handleChange}
@@ -266,19 +365,21 @@ const DropForm = ({ isOpen, onClose, onSave, initialDrop }) => {
             />
           </div>
 
+          {/* Location */}
           <div style={styles.fieldGroup}>
-            <label htmlFor="location" style={styles.label}>Location</label>
+            <label style={styles.label}>Where?</label>
             <input
               type="text"
-              id="location"
               name="location"
               value={drop.location}
               onChange={handleChange}
+              placeholder="Meeting spot"
               style={styles.input}
-              placeholder="Where?"
+              required
             />
           </div>
 
+          {/* Vibe selection */}
           <div style={styles.fieldGroup}>
             <label style={styles.label}>Vibe</label>
             <div style={styles.vibeGrid}>
@@ -286,8 +387,8 @@ const DropForm = ({ isOpen, onClose, onSave, initialDrop }) => {
                 <button
                   key={vibe.name}
                   type="button"
+                  style={styles.vibeButton(drop.vibe === vibe.name, vibe)}
                   onClick={() => handleVibeSelect(vibe.name)}
-                  style={styles.vibeButton(vibe, drop.vibe === vibe.name)}
                 >
                   {vibe.label}
                 </button>
@@ -295,25 +396,45 @@ const DropForm = ({ isOpen, onClose, onSave, initialDrop }) => {
             </div>
           </div>
 
-          <div style={styles.buttonGroup}>
-            <button
-              type="button"
-              onClick={onClose}
-              style={styles.cancelButton}
-              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f9fafb'}
-              onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              style={styles.submitButton}
-              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#1d4ed8'}
-              onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
-            >
-              {initialDrop ? 'Save Changes' : 'Create Drop'}
-            </button>
+          {/* Friends selection */}
+          <div style={styles.friendsSections}>
+            <div>
+              <label style={styles.friendsHeader}>Groups</label>
+              <div style={styles.groupsList}>
+                {friendGroups.map((group) => (
+                  <button
+                    key={group.id}
+                    type="button"
+                    style={styles.groupButton(selectedGroups.includes(group.id))}
+                    onClick={() => toggleGroupSelection(group.id)}
+                  >
+                    <span style={styles.groupEmoji}>{group.emoji}</span>
+                    {group.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label style={styles.friendsHeader}>Friends ({selectedFriends.length})</label>
+              <div style={styles.friendsList}>
+                {friends.map((friend) => (
+                  <div
+                    key={friend.name}
+                    style={styles.friendItem(selectedFriends.includes(friend.name))}
+                    onClick={() => toggleFriendSelection(friend.name)}
+                  >
+                    <span>{friend.emoji}</span>
+                    <span style={styles.friendName}>{friend.name}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
+
+          <button type="submit" style={styles.submitButton}>
+            {initialDrop ? 'Save Changes' : 'Create Hang'}
+          </button>
         </form>
       </div>
     </div>
