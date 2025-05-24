@@ -1,16 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DropCard from '../components/DropCard';
 import CreateButton from '../components/CreateButton';
 import DropForm from '../components/DropForm';
 import DropDetails from '../components/DropDetails';
 
-const HomePage = ({ drops, onSaveDrop, onRsvpChange, activeTabProp = 'home', onTogglePastView }) => {
+const HomePage = ({ drops, onSaveDrop, onRsvpChange, activeTabProp = 'home', onTogglePastView, forceOpenCreateForm = false, onCreateFormClose }) => {
   const [isDropFormOpen, setIsDropFormOpen] = useState(false);
   const [editingDrop, setEditingDrop] = useState(null);
   const [viewingDrop, setViewingDrop] = useState(null);
   const [showRsvpExpanded, setShowRsvpExpanded] = useState(false);
   // Use the prop from parent if provided
   const activeTab = activeTabProp;
+
+  useEffect(() => {
+    console.log('Current activeTabProp:', activeTabProp);
+  }, [activeTabProp]);
+
+  // Handle force open form from parent (Create tab)
+  useEffect(() => {
+    if (forceOpenCreateForm) {
+      setEditingDrop(null);
+      setIsDropFormOpen(true);
+    }
+  }, [forceOpenCreateForm]);
 
   const handleOpenCreateForm = () => {
     setEditingDrop(null);
@@ -22,9 +34,26 @@ const HomePage = ({ drops, onSaveDrop, onRsvpChange, activeTabProp = 'home', onT
     handleCloseForm();
   };
 
-  const handleRsvpStatusChange = (dropId, status, note, photoLink) => {
+  const handleRsvpStatusChange = (dropId, status, note, photoLink, keepExpanded) => {
     if (onRsvpChange) {
       onRsvpChange(dropId, status, note, photoLink);
+      
+      // If this is coming from a card and not the details view,
+      // we might need to update the viewing drop to show the expanded state
+      if (viewingDrop && viewingDrop.id === dropId) {
+        // Update the local viewing drop to reflect changes immediately
+        setViewingDrop({
+          ...viewingDrop,
+          yourRsvp: status,
+          rsvpNote: note,
+          photoLink: photoLink !== undefined ? photoLink : viewingDrop.photoLink
+        });
+      }
+      
+      // If keepExpanded is true, make sure the RSVP expanded view stays open
+      if (keepExpanded) {
+        setShowRsvpExpanded(true);
+      }
     }
   };
 
@@ -33,6 +62,7 @@ const HomePage = ({ drops, onSaveDrop, onRsvpChange, activeTabProp = 'home', onT
   };
   
   const handleEditDrop = (drop) => {
+    console.log('Edit drop called with:', drop);
     // Close the details view if it's open
     setViewingDrop(null);
     // Open the edit form with the selected drop
@@ -43,6 +73,10 @@ const HomePage = ({ drops, onSaveDrop, onRsvpChange, activeTabProp = 'home', onT
   const handleCloseForm = () => {
     setIsDropFormOpen(false);
     setEditingDrop(null);
+    // Notify parent component if this was opened via Create tab
+    if (onCreateFormClose && forceOpenCreateForm) {
+      onCreateFormClose();
+    }
   };
   
   const handleCloseDetails = () => {
@@ -198,9 +232,7 @@ const HomePage = ({ drops, onSaveDrop, onRsvpChange, activeTabProp = 'home', onT
               {activeTab === 'home' ? 'Upcoming Hangs' : 'Past Hangs'}
             </h2>
             
-            {activeTab === 'home' && (
-              <CreateButton onClick={handleOpenCreateForm} isInline={true} />
-            )}
+            {/* CREATE HANG button removed - functionality now only in Create tab */}
             
             {dropsToDisplay.length === 0 ? (
               <div style={styles.emptyState}>

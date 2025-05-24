@@ -311,7 +311,13 @@ const DropCard = ({ drop, onClick, onRsvpChange }) => {
   return (
     <div 
       ref={cardRef}
-      onClick={onClick}
+      onClick={(e) => {
+        // Don't navigate if clicking on the RSVP controls
+        if (e.target.closest('[data-rsvp-control="true"]')) {
+          return;
+        }
+        onClick();
+      }}
       style={styles.container}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -360,7 +366,7 @@ const DropCard = ({ drop, onClick, onRsvpChange }) => {
           currentStatus={yourRsvp} 
           onStatusChange={(newStatus) => {
             if (onRsvpChange) {
-              onRsvpChange(newStatus, rsvpNote);
+              onRsvpChange(drop.id, newStatus, rsvpNote);
             }
           }}
         />
@@ -385,6 +391,11 @@ const DropCard = ({ drop, onClick, onRsvpChange }) => {
               e.preventDefault();
               e.stopPropagation();
               setShowRsvpExpanded(!showRsvpExpanded);
+              // If we have an onRsvpChange prop, ensure it gets the latest status
+              if (onRsvpChange) {
+                // This ensures the expanded view stays visible even after RSVP changes
+                onRsvpChange(drop.id, yourRsvp, rsvpNote, undefined, true);
+              }
             }}
           >
             {showRsvpExpanded ? 'Less' : 'Add Note'}
@@ -403,18 +414,18 @@ const DropCard = ({ drop, onClick, onRsvpChange }) => {
             photoLink={drop.photoLink || ''}
             onStatusChange={(newStatus) => {
               if (onRsvpChange) {
-                onRsvpChange(newStatus, rsvpNote);
+                onRsvpChange(drop.id, newStatus, rsvpNote);
               }
             }}
             onNoteChange={(newNote) => {
               if (onRsvpChange) {
-                onRsvpChange(yourRsvp, newNote);
+                onRsvpChange(drop.id, yourRsvp, newNote);
               }
             }}
             onPhotoLinkChange={(newPhotoLink) => {
               if (onRsvpChange) {
                 // We're using the RSVP change handler to also handle photo links
-                onRsvpChange(yourRsvp, rsvpNote, newPhotoLink);
+                onRsvpChange(drop.id, yourRsvp, rsvpNote, newPhotoLink);
               }
             }}
             onClose={() => setShowRsvpExpanded(false)}

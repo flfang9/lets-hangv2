@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import sampleFriends from '../data/sampleFriends';
 import sampleFriendGroups from '../data/sampleFriendGroups';
 
-const DropForm = ({ isOpen, onClose, onSave, initialDrop }) => {
+const DropForm = ({ onClose, onSave, initialDrop }) => {
   const [friends] = useState(sampleFriends);
   const [friendGroups] = useState(sampleFriendGroups);
   const [selectedFriends, setSelectedFriends] = useState([]);
@@ -19,7 +19,9 @@ const DropForm = ({ isOpen, onClose, onSave, initialDrop }) => {
   });
 
   useEffect(() => {
+    console.log('DropForm useEffect triggered, initialDrop:', initialDrop);
     if (initialDrop) {
+      console.log('Setting form with initialDrop data');
       setDrop(initialDrop);
       // If editing an existing drop, set the selected friends
       if (initialDrop.friends && initialDrop.friends.length > 0) {
@@ -39,9 +41,9 @@ const DropForm = ({ isOpen, onClose, onSave, initialDrop }) => {
       setSelectedFriends([]);
       setSelectedGroups([]);
     }
-  }, [initialDrop, isOpen]);
+  }, [initialDrop]);
 
-  if (!isOpen) return null;
+  // No longer checking isOpen since this component is rendered conditionally
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -52,9 +54,7 @@ const DropForm = ({ isOpen, onClose, onSave, initialDrop }) => {
     setDrop((prev) => ({ ...prev, emoji }));
   };
 
-  const handleVibeSelect = (vibe) => {
-    setDrop((prev) => ({ ...prev, vibe }));
-  };
+  // Removed handleVibeSelect as we no longer have the vibe section
 
   // Toggle friend selection
   const toggleFriendSelection = (friendName) => {
@@ -133,14 +133,7 @@ const DropForm = ({ isOpen, onClose, onSave, initialDrop }) => {
   // Common emojis for events
   const commonEmojis = ['🎉', '🍔', '🍕', '🎮', '🏖️', '🏕️', '🎸', '🎬', '🏀', '⚽', '🎨', '📚'];
 
-  // Vibe options with colors
-  const vibeOptions = [
-    { name: 'chill', label: 'Chill', color: 'yellow', bgColor: '#fef9c3', borderColor: '#facc15', textColor: '#854d0e' },
-    { name: 'silly', label: 'Silly', color: 'green', bgColor: '#dcfce7', borderColor: '#4ade80', textColor: '#166534' },
-    { name: 'sweaty', label: 'Sweaty', color: 'red', bgColor: '#fee2e2', borderColor: '#f87171', textColor: '#991b1b' },
-    { name: 'talky', label: 'Talky', color: 'blue', bgColor: '#dbeafe', borderColor: '#60a5fa', textColor: '#1e40af' },
-    { name: 'spontaneous', label: 'Spontaneous', color: 'purple', bgColor: '#f3e8ff', borderColor: '#c084fc', textColor: '#6b21a8' },
-  ];
+  // We're keeping a default vibe value in the drop object for compatibility with other components
 
   const styles = {
     overlay: {
@@ -227,23 +220,7 @@ const DropForm = ({ isOpen, onClose, onSave, initialDrop }) => {
       fontSize: '16px',
       boxSizing: 'border-box'
     },
-    vibeGrid: {
-      display: 'flex',
-      flexWrap: 'wrap',
-      gap: '8px'
-    },
-    vibeButton: (isSelected, vibe) => ({
-      display: 'flex',
-      alignItems: 'center',
-      padding: '8px 12px',
-      borderRadius: '16px',
-      backgroundColor: isSelected ? vibe.bgColor : 'white',
-      border: `1px solid ${isSelected ? vibe.borderColor : '#e5e7eb'}`,
-      color: isSelected ? vibe.textColor : '#6b7280',
-      fontWeight: isSelected ? 600 : 500,
-      fontSize: '14px',
-      cursor: 'pointer'
-    }),
+    // Vibe-related styles removed
     friendsSections: {
       display: 'flex',
       flexDirection: 'column',
@@ -379,22 +356,7 @@ const DropForm = ({ isOpen, onClose, onSave, initialDrop }) => {
             />
           </div>
 
-          {/* Vibe selection */}
-          <div style={styles.fieldGroup}>
-            <label style={styles.label}>Vibe</label>
-            <div style={styles.vibeGrid}>
-              {vibeOptions.map((vibe) => (
-                <button
-                  key={vibe.name}
-                  type="button"
-                  style={styles.vibeButton(drop.vibe === vibe.name, vibe)}
-                  onClick={() => handleVibeSelect(vibe.name)}
-                >
-                  {vibe.label}
-                </button>
-              ))}
-            </div>
-          </div>
+          {/* Vibe section removed */}
 
           {/* Friends selection */}
           <div style={styles.friendsSections}>

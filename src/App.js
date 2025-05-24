@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import HomePage from './pages/HomePage';
 import FriendsPage from './pages/FriendsPage';
+import DropForm from './components/DropForm';
 import sampleDrops from './data/sampleDrops';
 import { initViewportFix } from './utils/viewportFix';
 import './styles/responsive.css';
@@ -56,10 +57,13 @@ function App() {
   };
 
   // Handle RSVP changes and photo links
-  const handleRsvpChange = (dropId, status, note, photoLink) => {
+  const handleRsvpChange = (dropId, status, note, photoLink, keepExpanded = false) => {
     setDrops(prevDrops => {
       return prevDrops.map(drop => {
         if (drop.id === dropId) {
+          // Get current user name (hardcoded as 'You' for this demo)
+          const userName = 'You';
+          
           // Update the main drop RSVP data
           const updates = {
             ...drop,
@@ -72,6 +76,32 @@ function App() {
             updates.photoLink = photoLink;
           }
           
+          // Also update or add the current user's RSVP in the friendsRsvp array
+          // so other attendees can see your note
+          let updatedFriendsRsvp = [...(drop.friendsRsvp || [])];
+          
+          // Check if current user already has an entry
+          const userIndex = updatedFriendsRsvp.findIndex(friend => friend.name === userName);
+          
+          if (userIndex >= 0) {
+            // Update existing entry
+            updatedFriendsRsvp[userIndex] = {
+              ...updatedFriendsRsvp[userIndex],
+              status,
+              note,
+              photoLink: photoLink !== undefined ? photoLink : updatedFriendsRsvp[userIndex].photoLink
+            };
+          } else if (status !== 'no_response' || note) {
+            // Add new entry only if there's a response or note
+            updatedFriendsRsvp.push({
+              name: userName,
+              status,
+              note,
+              photoLink: photoLink
+            });
+          }
+          
+          updates.friendsRsvp = updatedFriendsRsvp;
           return updates;
         }
         return drop;
@@ -110,6 +140,48 @@ function App() {
       paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))',
       fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
       maxWidth: '600px',
+    },
+    overlay: {
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 1000
+    },
+    modal: {
+      backgroundColor: 'white',
+      borderRadius: '12px',
+      width: '90%',
+      maxWidth: '500px',
+      maxHeight: '90vh',
+      overflowY: 'auto',
+      position: 'relative',
+      boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+    },
+    modalHeading: {
+      fontSize: '18px',
+      fontWeight: '600',
+      color: '#1f2937',
+      padding: '16px',
+      borderBottom: '1px solid #e5e7eb',
+      margin: 0
+    },
+    closeButton: {
+      position: 'absolute',
+      top: '12px',
+      right: '16px',
+      backgroundColor: 'transparent',
+      border: 'none',
+      fontSize: '24px',
+      color: '#9ca3af',
+      cursor: 'pointer',
+      padding: '4px 8px',
+      borderRadius: '4px'
     },
     content: {
       flex: 1,
@@ -179,11 +251,31 @@ function App() {
     }
   };
 
+  // State to control create form visibility from App level
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  
+  // Updated approach: Create tab opens the DropForm for proper creation
+  const handleCreateClick = () => {
+    // Set state to force the HomePage to open the create form
+    setShowCreateForm(true);
+    
+    // Switch to home tab where the form will be displayed
+    setActiveTab('home');
+  };
+  
+  // Handle when the create form is closed
+  const handleCreateFormClose = () => {
+    setShowCreateForm(false);
+  };
+
+  // Handle closing the create form - no longer needed as HomePage will handle this
+
   // Render the current tab content
   const renderTabContent = () => {
     switch (activeTab) {
       case 'home':
       case 'past':
+      case 'create': // Create tab shows the home page in the background
         return (
           <HomePage 
             drops={drops} 
@@ -191,6 +283,8 @@ function App() {
             onRsvpChange={handleRsvpChange}
             activeTabProp={activeTab}
             onTogglePastView={setActiveTab}
+            forceOpenCreateForm={showCreateForm}
+            onCreateFormClose={handleCreateFormClose}
           />
         );
       // Photos tab removed
@@ -227,6 +321,8 @@ function App() {
       </div>
       <div style={styles.content}>
         {renderTabContent()}
+        
+        {/* No need for a global DropForm - we're redirecting to Home */}
       </div>
 
       {/* Desktop Navigation (hidden on mobile) */}
@@ -285,7 +381,7 @@ function App() {
           <span>Home</span>
         </button>
         <button 
-          onClick={() => setActiveTab('create')} 
+          onClick={handleCreateClick} 
           style={{
             color: activeTab === 'create' ? '#2563eb' : '#64748b',
             background: 'none',

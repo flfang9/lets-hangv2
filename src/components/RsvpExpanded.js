@@ -14,13 +14,30 @@ const RsvpExpanded = ({
 }) => {
   const [localNote, setLocalNote] = useState(note || '');
   const [localPhotoLink, setLocalPhotoLink] = useState(photoLink || '');
+  const [noteSaved, setNoteSaved] = useState(false);
   
   const handleNoteChange = (e) => {
     setLocalNote(e.target.value);
+    setNoteSaved(false);
+  };
+  
+  const handleNoteSave = () => {
+    onNoteChange(localNote);
+    setNoteSaved(true);
+    setTimeout(() => setNoteSaved(false), 2000); // Hide success message after 2 seconds
   };
   
   const handleNoteBlur = () => {
+    // Note: We're keeping onBlur for backward compatibility
     onNoteChange(localNote);
+  };
+  
+  const handleNoteKeyDown = (e) => {
+    // Save note when pressing Ctrl+Enter or Cmd+Enter
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault();
+      handleNoteSave();
+    }
   };
   
   const handlePhotoLinkChange = (e) => {
@@ -225,9 +242,33 @@ const RsvpExpanded = ({
           style={styles.noteInput}
           value={localNote}
           onChange={handleNoteChange}
+          onKeyDown={handleNoteKeyDown}
           onBlur={handleNoteBlur}
-          placeholder="Enter any additional details..."
+          placeholder="Enter any additional details... (Ctrl+Enter to save)"
         />
+        <div style={{display: 'flex', justifyContent: 'space-between', marginTop: '8px', alignItems: 'center'}}>
+          <button 
+            type="button"
+            onClick={handleNoteSave}
+            style={{
+              backgroundColor: '#2563eb',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              padding: '6px 12px',
+              fontSize: '14px',
+              fontWeight: '500',
+              cursor: 'pointer'
+            }}
+          >
+            Save Note
+          </button>
+          {noteSaved && (
+            <div style={{color: '#16a34a', fontSize: '14px', fontWeight: '500'}}>
+              ✓ Note saved
+            </div>
+          )}
+        </div>
       </div>
       
       {/* Photo link section - only shown for past events */}

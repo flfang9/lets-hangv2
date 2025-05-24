@@ -24,12 +24,34 @@ const PLACEHOLDER_IMAGES = [
   'https://source.unsplash.com/random/800x600/?gaming'
 ];
 
+// Generate dates relative to today
+const today = new Date();
+const tomorrow = new Date(today);
+tomorrow.setDate(tomorrow.getDate() + 1);
+
+const nextWeek = new Date(today);
+nextWeek.setDate(nextWeek.getDate() + 7);
+
+const yesterday = new Date(today);
+yesterday.setDate(yesterday.getDate() - 1);
+
+const lastWeek = new Date(today);
+lastWeek.setDate(lastWeek.getDate() - 7);
+
+const nextMonth = new Date(today);
+nextMonth.setMonth(nextMonth.getMonth() + 1);
+
+// Format a date as ISO string but only keep the date and time parts
+const formatDateForSample = (date) => {
+  return date.toISOString().split('.')[0];
+};
+
 const sampleDrops = [
   {
     id: '0',
     emoji: '🎮',
     title: 'Game Night at Riley\'s',
-    date: '2025-04-01T19:00', // Past event date
+    date: formatDateForSample(lastWeek), // Last week
     location: 'Riley\'s Apartment, 42 Oak St',
     friendsCount: 4,
     isHost: false,
@@ -82,7 +104,7 @@ const sampleDrops = [
     id: '1',
     emoji: '🍕',
     title: 'Pizza Night at Roberta\'s',
-    date: '2025-04-19T19:00',
+    date: formatDateForSample(tomorrow), // Tomorrow
     location: 'Roberta\'s Pizza, 261 Moore St',
     friendsCount: 5,
     isHost: true,
@@ -117,8 +139,8 @@ const sampleDrops = [
   {
     id: '2',
     emoji: '🏃',
-    title: 'Morning Run + Coffee',
-    date: '2025-04-20T07:30',
+    title: 'Morning Run with Taylor',
+    date: formatDateForSample(nextWeek), // Next week
     location: 'Central Park Reservoir',
     friendsCount: 2,
     isHost: false,
@@ -149,38 +171,35 @@ const sampleDrops = [
   },
   {
     id: '3',
-    emoji: '🎮',
-    title: 'Game Night: Mario Kart',
-    date: '2025-04-21T20:00',
-    location: 'My Place',
-    friendsCount: 6,
-    isHost: true,
-    vibe: 'silly',
-    friends: ['Riley', 'Casey', 'Sydney', 'Avery', 'Blake', 'Jessie'],
+    emoji: '🎬',
+    title: 'Movie Marathon',
+    date: formatDateForSample(yesterday), // Yesterday
+    location: 'Prospect Park',
+    friendsCount: 3,
+    isHost: false,
+    vibe: 'chill',
+    friends: ['Morgan', 'Jamie', 'Casey'],
     yourRsvp: RSVP_STATUS.GOING,
     rsvpNote: '',
     friendsRsvp: [
-      { name: 'Riley', status: RSVP_STATUS.GOING },
-      { name: 'Casey', status: RSVP_STATUS.GOING },
-      { name: 'Sydney', status: RSVP_STATUS.GOING },
-      { name: 'Avery', status: RSVP_STATUS.GOING },
-      { name: 'Blake', status: RSVP_STATUS.GOING },
-      { name: 'Jessie', status: RSVP_STATUS.GOING }
+      { name: 'Morgan', status: RSVP_STATUS.GOING },
+      { name: 'Jamie', status: RSVP_STATUS.GOING },
+      { name: 'Casey', status: RSVP_STATUS.GOING }
     ],
     photos: [
       {
         id: '301',
-        url: PLACEHOLDER_IMAGES[9],
-        caption: 'Game night setup',
-        uploadedBy: 'Riley',
-        timestamp: '2025-04-21T19:30:00'
+        url: PLACEHOLDER_IMAGES[8],
+        caption: 'Movie night setup',
+        uploadedBy: 'Morgan',
+        timestamp: '2025-04-20T19:30:00'
       },
       {
         id: '302',
-        url: PLACEHOLDER_IMAGES[10],
-        caption: 'Mario Kart tournament',
-        uploadedBy: 'Casey',
-        timestamp: '2025-04-21T21:00:00'
+        url: PLACEHOLDER_IMAGES[9],
+        caption: 'Movie marathon',
+        uploadedBy: 'Jamie',
+        timestamp: '2025-04-20T21:00:00'
       }
     ]
   },
@@ -197,20 +216,48 @@ const sampleDrops = [
   },
   {
     id: '5',
-    emoji: '🍻',
-    title: 'Happy Hour',
-    date: '2025-04-23T17:30',
+    emoji: '🌮',
+    title: 'Taco Tuesday',
+    date: formatDateForSample(today), // Today
     location: 'The Alchemist',
     friendsCount: 8,
     isHost: false,
     vibe: 'talky',
-    friends: ['Morgan', 'Casey', 'Jamie', 'Blake', 'Sam', 'Jessie', 'Riley', 'Sydney']
+    friends: ['Morgan', 'Casey', 'Jamie', 'Blake', 'Sam', 'Jessie', 'Riley', 'Sydney'],
+    yourRsvp: RSVP_STATUS.GOING,
+    rsvpNote: '',
+    friendsRsvp: [
+      { name: 'Morgan', status: RSVP_STATUS.GOING },
+      { name: 'Casey', status: RSVP_STATUS.GOING },
+      { name: 'Jamie', status: RSVP_STATUS.GOING },
+      { name: 'Blake', status: RSVP_STATUS.GOING },
+      { name: 'Sam', status: RSVP_STATUS.GOING },
+      { name: 'Jessie', status: RSVP_STATUS.GOING },
+      { name: 'Riley', status: RSVP_STATUS.GOING },
+      { name: 'Sydney', status: RSVP_STATUS.GOING }
+    ],
+    photos: [
+      {
+        id: '501',
+        url: PLACEHOLDER_IMAGES[4],
+        caption: 'Taco Tuesday vibes',
+        uploadedBy: 'Morgan',
+        timestamp: '2025-04-23T18:00:00'
+      },
+      {
+        id: '502',
+        url: PLACEHOLDER_IMAGES[5],
+        caption: 'Tacos and drinks',
+        uploadedBy: 'Casey',
+        timestamp: '2025-04-23T19:00:00'
+      }
+    ]
   },
   {
     id: '6',
     emoji: '🏊',
     title: 'Beach Day!',
-    date: '2025-04-25T11:00',
+    date: formatDateForSample(nextMonth), // Next month
     location: 'Rockaway Beach',
     friendsCount: 5,
     isHost: true,
